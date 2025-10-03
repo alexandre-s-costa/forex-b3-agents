@@ -1,0 +1,1 @@
+from .forex_data import ForexDataProvider
