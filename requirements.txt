@@ -1,0 +1,12 @@
+agno>=0.1.0
+pandas
+numpy
+matplotlib
+plotly
+yfinance
+fastapi
+uvicorn
+openpyxl
+python-multipart
+jinja2
+xlrd
