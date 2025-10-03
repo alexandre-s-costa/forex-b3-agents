@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex Agents - Análise de Mercado</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #f1f8ff;
+            font-weight: bold;
+        }
+        .table {
+            font-size: 0.9rem;
+        }
+        .stats-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+        }
+        .chart-container {
+            height: 500px;
+            width: 100%;
+        }
+        .navbar {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navegação -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up"></i> Forex Agents
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link active" href="/">
+                    <i class="bi bi-house"></i> Dashboard
+                </a>
+                <a class="nav-link" href="/upload">
+                    <i class="bi bi-upload"></i> Upload de Dados
+                </a>
+                <a class="nav-link" href="/b3">
+                    <i class="bi bi-bank"></i> Ativos B3
+                </a>
+                <div class="nav-item dropdown ms-3">
+                    <a class="nav-link dropdown-toggle" href="#" id="mainMenuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Menu
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="mainMenuDropdown">
+                        <li><a class="dropdown-item" href="/"><i class="bi bi-house"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/upload"><i class="bi bi-upload"></i> Upload de Dados</a></li>
+                        <li><a class="dropdown-item" href="/b3"><i class="bi bi-bank"></i> Ativos B3</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="mb-4">
+            <h1 class="text-center">Forex Agents - Análise de Mercado</h1>
+            <p class="text-center text-muted">Visualização de dados do mercado Forex</p>
+        </header>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">Configurações</div>
+                    <div class="card-body">
+                        <form id="forex-form" method="post">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="symbol" class="form-label">Par de Moedas</label>
+                                        <select class="form-select" id="symbol" name="symbol" required>
+                                            {% for pair in available_pairs %}
+                                            <option value="{{ pair }}" {% if pair == selected_symbol %}selected{% endif %}>{{ pair }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="timeframe" class="form-label">Timeframe</label>
+                                        <select class="form-select" id="timeframe" name="timeframe">
+                                            <option value="1h" {% if timeframe == '1h' %}selected{% endif %}>1 hora</option>
+                                            <option value="4h" {% if timeframe == '4h' %}selected{% endif %}>4 horas</option>
+                                            <option value="1d" {% if timeframe == '1d' %}selected{% endif %}>Diário</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="days_back" class="form-label">Período (dias)</label>
+                                        <select class="form-select" id="days_back" name="days_back">
+                                            <option value="1" {% if days_back == 1 %}selected{% endif %}>1 dia</option>
+                                            <option value="2" {% if days_back == 2 %}selected{% endif %}>2 dias</option>
+                                            <option value="7" {% if days_back == 7 %}selected{% endif %}>1 semana</option>
+                                            <option value="14" {% if days_back == 14 %}selected{% endif %}>14 dias</option>
+                                            <option value="30" {% if days_back == 30 %}selected{% endif %}>30 dias</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">Atualizar Dados</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if asset_info %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i>Informações do Ativo
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-primary">{{ asset_info.name }}</h5>
+                                <p class="text-muted mb-3">{{ asset_info.description }}</p>
+                                
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Moeda Base:</strong></div>
+                                    <div class="col-sm-8">{{ asset_info.base_currency }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Moeda Cotação:</strong></div>
+                                    <div class="col-sm-8">{{ asset_info.quote_currency }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Categoria:</strong></div>
+                                    <div class="col-sm-8">
+                                        <span class="badge bg-primary">{{ asset_info.category }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Valor do Pip:</strong></div>
+                                    <div class="col-sm-8">{{ asset_info.pip_value }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Spread Típico:</strong></div>
+                                    <div class="col-sm-8">{{ asset_info.spread_typical }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Volatilidade:</strong></div>
+                                    <div class="col-sm-8">
+                                        {% if asset_info.volatility == 'Alta' %}
+                                            <span class="badge bg-danger">{{ asset_info.volatility }}</span>
+                                        {% elif asset_info.volatility == 'Média' or asset_info.volatility == 'Média-Alta' or asset_info.volatility == 'Baixa-Média' %}
+                                            <span class="badge bg-warning">{{ asset_info.volatility }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ asset_info.volatility }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Horários de Sessão:</strong></div>
+                                    <div class="col-sm-8"><small>{{ asset_info.session_hours }}</small></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Horário Brasil (BRT):</strong></div>
+                                    <div class="col-sm-8"><small class="text-success">{{ asset_info.horario_brasil }}</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if stats and 'error' not in stats %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h5>{{ stats.symbol }}</h5>
+                                <p class="text-muted">{{ stats.timeframe }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>Abertura/Fechamento</h6>
+                                <p>{{ "%.5f"|format(stats.open_first) }} / {{ "%.5f"|format(stats.close_last) }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>Máxima/Mínima</h6>
+                                <p>{{ "%.5f"|format(stats.high_max) }} / {{ "%.5f"|format(stats.low_min) }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>Variação</h6>
+                                <p class="{% if stats.change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ "%.5f"|format(stats.change) }} ({{ "%.2f"|format(stats.change_pct) }}%)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% elif stats and 'error' in stats %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="alert alert-warning" role="alert">
+                    <strong>Aviso:</strong> {{ stats.error }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">Gráfico de Candles</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            {{ chart_html|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">Dados OHLC</div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            {{ table_html|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-4 mb-4">
+        <p class="text-muted">Forex Agents &copy; 2025</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
