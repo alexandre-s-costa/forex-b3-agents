@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Dados - Forex Agents</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #f1f8ff;
+            font-weight: bold;
+        }
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #0d6efd;
+            background-color: #e7f3ff;
+        }
+        .upload-area.dragover {
+            border-color: #0d6efd;
+            background-color: #e7f3ff;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-icon {
+            font-size: 3rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .table {
+            font-size: 0.9rem;
+        }
+        .navbar {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navegação -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up"></i> Forex Agents
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">
+                    <i class="bi bi-house"></i> Dashboard
+                </a>
+                <a class="nav-link active" href="/upload">
+                    <i class="bi bi-upload"></i> Upload de Dados
+                </a>
+                <a class="nav-link" href="/b3">
+                    <i class="bi bi-bank"></i> Ativos B3
+                </a>
+                <div class="nav-item dropdown ms-3">
+                    <a class="nav-link dropdown-toggle" href="#" id="mainMenuDropdownUpload" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Menu
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="mainMenuDropdownUpload">
+                        <li><a class="dropdown-item" href="/"><i class="bi bi-house"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/upload"><i class="bi bi-upload"></i> Upload de Dados</a></li>
+                        <li><a class="dropdown-item" href="/b3"><i class="bi bi-bank"></i> Ativos B3</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="mb-4">
+            <h1 class="text-center">Upload de Dados</h1>
+            <p class="text-center text-muted">Envie arquivos Excel ou CSV com dados de trading</p>
+        </header>
+
+        <!-- Mensagens de Feedback -->
+        {% if message %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <!-- Formulário de Upload -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-cloud-upload"></i> Enviar Arquivo
+                    </div>
+                    <div class="card-body">
+                        <form id="upload-form" method="post" enctype="multipart/form-data">
+                            <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                                <i class="bi bi-cloud-upload upload-icon"></i>
+                                <h5>Clique aqui ou arraste um arquivo</h5>
+                                <p class="text-muted">Formatos suportados: CSV, Excel (.xlsx, .xls)</p>
+                                <input type="file" id="file-input" name="file" class="file-input" accept=".csv,.xlsx,.xls" required>
+                                <div id="file-name" class="mt-2 text-primary"></div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-upload"></i> Processar Arquivo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações sobre o formato -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle"></i> Formato Obrigatório
+                    </div>
+                    <div class="card-body">
+                        <p>O arquivo deve conter as seguintes colunas obrigatórias:</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item"><code>data</code> - Data da operação</li>
+                                    <li class="list-group-item"><code>min_pts_gain</code> - Pontos mínimos de ganho</li>
+                                    <li class="list-group-item"><code>max_pts_gain</code> - Pontos máximos de ganho</li>
+                                    <li class="list-group-item"><code>min_pts_stop</code> - Pontos mínimos de stop</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item"><code>max_pts_stop</code> - Pontos máximos de stop</li>
+                                    <li class="list-group-item"><code>min_resultado</code> - Resultado mínimo</li>
+                                    <li class="list-group-item"><code>max_resultado</code> - Resultado máximo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo dos Dados (se houver) -->
+        {% if data_summary %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-bar-chart"></i> Resumo dos Dados
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h4 class="text-primary">{{ data_summary.filename }}</h4>
+                                    <p class="text-muted">Arquivo</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h4 class="text-success">{{ data_summary.rows }}</h4>
+                                    <p class="text-muted">Registros</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h4 class="text-info">{{ data_summary.columns }}</h4>
+                                    <p class="text-muted">Colunas</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    {% if data_summary.data_id %}
+                                    <a href="/charts/{{ data_summary.data_id }}" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-graph-up"></i> Ver Gráficos
+                                    </a>
+                                    <p class="text-muted mt-2">Visualizar análises</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if data_summary.separator %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Separador detectado:</strong> {{ data_summary.separator }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tabela de Dados (se houver) -->
+        {% if table_html %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-table"></i> Dados Carregados
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            {{ table_html|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer class="text-center mt-4 mb-4">
+        <p class="text-muted">Forex Agents &copy; 2024</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Manipulação do arquivo
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const uploadArea = document.querySelector('.upload-area');
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                fileName.textContent = `Arquivo selecionado: ${e.target.files[0].name}`;
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                fileName.textContent = `Arquivo selecionado: ${files[0].name}`;
+            }
+        });
+    </script>
+</body>
+</html>
