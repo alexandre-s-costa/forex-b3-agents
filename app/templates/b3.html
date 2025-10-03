@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex Agents - Ativos B3</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #f1f8ff;
+            font-weight: bold;
+        }
+        .table {
+            font-size: 0.9rem;
+        }
+        .stats-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #198754;
+        }
+        .chart-container {
+            height: 500px;
+            width: 100%;
+        }
+        .navbar {
+            margin-bottom: 2rem;
+        }
+        .b3-badge {
+            background-color: #198754;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navegação -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up"></i> Forex Agents
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">
+                    <i class="bi bi-house"></i> Dashboard
+                </a>
+                <a class="nav-link" href="/upload">
+                    <i class="bi bi-upload"></i> Upload de Dados
+                </a>
+                <a class="nav-link active" href="/b3">
+                    <i class="bi bi-bank"></i> Ativos B3
+                </a>
+                <div class="nav-item dropdown ms-3">
+                    <a class="nav-link dropdown-toggle" href="#" id="mainMenuDropdownB3" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Menu
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="mainMenuDropdownB3">
+                        <li><a class="dropdown-item" href="/"><i class="bi bi-house"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/upload"><i class="bi bi-upload"></i> Upload de Dados</a></li>
+                        <li><a class="dropdown-item" href="/b3"><i class="bi bi-bank"></i> Ativos B3</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="mb-4">
+            <h1 class="text-center">
+                <span class="b3-badge">B3</span> Ativos da Bolsa Brasileira
+            </h1>
+            <p class="text-center text-muted">Visualização de dados dos ativos WINFUT e WDOFUT</p>
+        </header>
+
+        {% if error %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="alert alert-danger" role="alert">
+                    <strong>Erro:</strong> {{ error }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-gear"></i> Configurações dos Ativos B3
+                    </div>
+                    <div class="card-body">
+                        <form id="b3-form" method="post">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="asset" class="form-label">Ativo B3</label>
+                                        <select class="form-select" id="asset" name="asset" required>
+                                            {% for asset in available_assets %}
+                                            <option value="{{ asset }}" {% if asset == selected_asset %}selected{% endif %}>
+                                                {{ asset }}
+                                                {% if asset == 'WINFUT' %}
+                                                    - Mini Índice Futuro
+                                                {% elif asset == 'WDOFUT' %}
+                                                    - Mini Dólar Futuro
+                                                {% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="timeframe" class="form-label">Timeframe</label>
+                                        <select class="form-select" id="timeframe" name="timeframe">
+                                            <option value="1h" {% if timeframe == '1h' %}selected{% endif %}>1 hora</option>
+                                            <option value="4h" {% if timeframe == '4h' %}selected{% endif %}>4 horas</option>
+                                            <option value="1d" {% if timeframe == '1d' %}selected{% endif %}>Diário</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="days_back" class="form-label">Período (dias)</label>
+                                        <select class="form-select" id="days_back" name="days_back">
+                                            <option value="1" {% if days_back == 1 %}selected{% endif %}>1 dia</option>
+                                            <option value="2" {% if days_back == 2 %}selected{% endif %}>2 dias</option>
+                                            <option value="7" {% if days_back == 7 %}selected{% endif %}>1 semana</option>
+                                            <option value="14" {% if days_back == 14 %}selected{% endif %}>14 dias</option>
+                                            <option value="30" {% if days_back == 30 %}selected{% endif %}>30 dias</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-arrow-clockwise"></i> Atualizar Dados
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if table_html and chart_html %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h5>{{ selected_asset }}</h5>
+                                <p class="text-muted">
+                                    {% if selected_asset == 'WINFUT' %}
+                                        Mini Índice Futuro
+                                    {% elif selected_asset == 'WDOFUT' %}
+                                        Mini Dólar Futuro
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>Timeframe</h6>
+                                <p>{{ timeframe }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>Período</h6>
+                                <p>{{ days_back }} dias</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>Mercado</h6>
+                                <p><span class="b3-badge">B3 Brasil</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-bar-chart"></i> Gráfico de Candles - {{ selected_asset }}
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            {{ chart_html|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-table"></i> Dados OHLC - {{ selected_asset }}
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            {{ table_html|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle"></i> Informações dos Ativos B3
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><strong>WINFUT - Mini Índice Futuro</strong></h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-check-circle text-success"></i> Contrato futuro do Ibovespa</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Liquidação financeira</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Horário: 9h às 18h</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><strong>WDOFUT - Mini Dólar Futuro</strong></h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-check-circle text-success"></i> Contrato futuro de USD/BRL</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Liquidação financeira</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Horário: 9h às 18h</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-4 mb-4">
+        <p class="text-muted">Forex Agents &copy; 2025 - Dados B3 Brasil</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
